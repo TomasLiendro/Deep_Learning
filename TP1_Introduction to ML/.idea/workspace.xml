@@ -14,6 +14,9 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
   <component name="ProjectId" id="1gSOq183pMgkn8WP4Z17Vbl5vGl" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -22,6 +25,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="ServiceViewManager">
@@ -48,5 +52,15 @@
       <updated>1598104714126</updated>
     </task>
     <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="392" y="23" key="CommitChangelistDialog2" timestamp="1598725780133">
+      <screen x="0" y="23" width="1440" height="797" />
+    </state>
+    <state x="392" y="23" key="CommitChangelistDialog2/0.23.1440.797@0.23.1440.797" timestamp="1598725780133" />
+    <state x="195" y="34" key="DiffContextDialog" timestamp="1598725767949">
+      <screen x="0" y="23" width="1440" height="797" />
+    </state>
+    <state x="195" y="34" key="DiffContextDialog/0.23.1440.797@0.23.1440.797" timestamp="1598725767949" />
   </component>
 </project>
