@@ -49,20 +49,20 @@ class KNN:
 # print(y_test[:20])
 
 #
-(X_train, Y_train), (X_test, Y_test) = tf.datasets.mnist.load_data()
-	# mnist.load_data()
-print('MNIST Dataset Shape:')
-print('X_train: ' + str(X_train.shape))
-print('Y_train: ' + str(Y_train.shape))
-print('X_test:  ' + str(X_test.shape))
-print('Y_test:  ' + str(Y_test.shape))
-
-model = KNN(K=3)
-model.train(X_train, Y_train)
-resu = model.predict(X_test[:20])
-
-print(resu)
-print(Y_test[:20])
+# (X_train, Y_train), (X_test, Y_test) = tf.datasets.mnist.load_data()
+# 	# mnist.load_data()
+# print('MNIST Dataset Shape:')
+# print('X_train: ' + str(X_train.shape))
+# print('Y_train: ' + str(Y_train.shape))
+# print('X_test:  ' + str(X_test.shape))
+# print('Y_test:  ' + str(Y_test.shape))
+#
+# model = KNN(K=3)
+# model.train(X_train, Y_train)
+# resu = model.predict(X_test[:20])
+#
+# print(resu)
+# print(Y_test[:20])
 
 # for i in range(len(X_test[:20])):
 # 	sample = i
