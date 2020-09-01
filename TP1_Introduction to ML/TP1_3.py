@@ -17,7 +17,8 @@ class NN:
 
 	def predict(self, X):
 		assert self.X is not None, 'Train method needs to be call first'
-		Yp = np.zeros(X.shape[0], np.uint8)
+		Yp = np.zeros(X.shape[0], np.int16)
+		X = X.astype(np.int16)
 		for idx in range(X.shape[0]):
 			norm = np.linalg.norm(self.X - X[idx].ravel(), axis=-1)
 			idmin = np.argmin(norm)
@@ -46,5 +47,7 @@ model = NN()
 model.train(X_train, Y_train)
 resu = model.predict(X_test[:20])
 
-print(resu)
-print(Y_test[:20])
+# print(resu)
+# print(Y_test)
+# acc = np.mean(resu == Y_test[:20])
+# print('accuracy: %f' % acc)

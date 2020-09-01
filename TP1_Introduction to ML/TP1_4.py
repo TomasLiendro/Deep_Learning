@@ -87,10 +87,7 @@ for i in range(len(clase2)):
 	plt.show(block=0)
 	plt.pause(0.001)
 
-
-
 plt.figure()
-
 
 datos_train.print(clase=datos_train.clase, train=True)
 model = KNN(3)

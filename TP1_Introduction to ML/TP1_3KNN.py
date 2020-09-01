@@ -21,8 +21,9 @@ class KNN:
 
 	def predict(self, X):
 		assert self.X is not None, 'Train method needs to be call first'
-		Yp = np.zeros((X.shape[0], self.K), np.uint8)
-		resu = np.zeros(X.shape[0], np.uint8)
+		X = X.astype(np.int16)
+		Yp = np.zeros((X.shape[0], self.K), np.int16)
+		resu = np.zeros(X.shape[0], np.int16)
 		for idx in range(X.shape[0]):
 			norm = np.linalg.norm(self.X - X[idx].ravel(), ord=2, axis=-1)
 			ordenado_idsmin = norm.argsort()
@@ -37,30 +38,29 @@ class KNN:
 
 
 #
-# (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-# print('x_train shape: ', x_train.shape)
-# print(x_train.shape[0], 'train shape')
-# print(x_test.shape[0], 'test shape')
-# model = KNN(K=3)
-# model.train(x_train, y_train)
-# resu = model.predict(x_test[:20])
-#
-# print(resu)
-# print(y_test[:20])
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+print('x_train shape: ', x_train.shape)
+print(x_train.shape[0], 'train shape')
+print(x_test.shape[0], 'test shape')
+model = KNN(K=3)
+model.train(x_train, y_train)
+resu = model.predict(x_test[:20])
+
+print(resu)
+print(y_test[:20])
 
 #
-# (X_train, Y_train), (X_test, Y_test) = tf.datasets.mnist.load_data()
-# 	# mnist.load_data()
-# print('MNIST Dataset Shape:')
-# print('X_train: ' + str(X_train.shape))
-# print('Y_train: ' + str(Y_train.shape))
-# print('X_test:  ' + str(X_test.shape))
-# print('Y_test:  ' + str(Y_test.shape))
-#
-# model = KNN(K=3)
-# model.train(X_train, Y_train)
-# resu = model.predict(X_test[:20])
-#
+(X_train, Y_train), (X_test, Y_test) = tf.datasets.mnist.load_data()
+print('MNIST Dataset Shape:')
+print('X_train: ' + str(X_train.shape))
+print('Y_train: ' + str(Y_train.shape))
+print('X_test:  ' + str(X_test.shape))
+print('Y_test:  ' + str(Y_test.shape))
+
+model = KNN(K=3)
+model.train(X_train, Y_train)
+resu = model.predict(X_test[:20])
+
 # print(resu)
 # print(Y_test[:20])
 
@@ -71,3 +71,6 @@ class KNN:
 # 	fig = plt.figure(i)
 # 	plt.imshow(image, cmap='gray')
 # plt.show()
+
+acc = np.mean(resu == Y_test[:20])
+print('accuracy: %f' % acc)
