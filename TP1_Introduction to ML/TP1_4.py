@@ -1,126 +1,88 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import ListedColormap
+
 from TP1_3KNN import KNN
 
 
 class Datos:
-	def __init__(self, nclases=2, ndatos=10, train=False, size=10):
+	def __init__(self, nclases=5, ndatos=50, size=100):
+		self.nro_clases = nclases
 		self.nclases = list(range(nclases))
 		self.size = size
-		self.train = train
 		self.ndatos = ndatos
 		self.datos = np.zeros((self.ndatos, 2))
-		if train:
-			datosx, datosy, self.clase = self.generar_datos()
-		else:
-			datosx, datosy = self.generar_datos()
-		self.datos[:, 0] = datosx
-		self.datos[:, 1] = datosy
+
+		self.datosx, self.datosy, self.clase = self.generar_datos()
+		self.datos[:, 0] = self.datosx
+		self.datos[:, 1] = self.datosy
+		self.rang = np.arange(self.size / len(self.nclases), self.size + self.size / len(self.nclases),
+		                      self.size / len(self.nclases))
 
 	def generar_datos(self):  # genero datos bidimensionales
 		x_data = np.zeros(self.ndatos)
 		y_data = np.zeros(self.ndatos)
-		if self.train:
-			clase = []
-		# for i in range(self.ndatos):
-		x_data = np.random.random(self.ndatos) * self.size
-		y_data = np.random.random(self.ndatos) * self.size
-		if self.train:
-			for i in range(self.ndatos):
-				clase.append(np.random.choice(self.nclases))
-		if self.train:
-			return x_data, y_data, clase
-		else:
-			return x_data, y_data
+		clase = []
+		rangos = np.arange(self.size / len(self.nclases), self.size + self.size / len(self.nclases),
+		                   self.size / len(self.nclases))
+		self.rang = rangos
+		x_data = np.random.normal(np.random.uniform(-self.size / 2, self.size / 2, 1),
+		                          np.random.uniform(self.size / 5, int(self.size)), self.ndatos)
+		y_data = np.random.normal(np.random.uniform(-self.size / 2, self.size / 2, 1),
+		                          np.random.uniform(self.size / 5, int(self.size)), self.ndatos)
+		dist = []
+		for i in range(self.ndatos):
+			dist.append(np.linalg.norm([x_data[i], y_data[i]], ord=2))
+			for j in range(self.nro_clases):
+
+				if dist[i] > rangos[-1 - j]:
+					clase.append(self.nro_clases - j)
+					break
+			if dist[i] < rangos[0]:
+				clase.append(0)
+
+		return x_data, y_data, clase
 
 	def print(self, clase=None, train=False):
-		color = ['red', 'black', 'blue', 'orange', 'magenta', 'yellow']
-		if train:
-			for i in range(self.ndatos):
-				plt.scatter(self.datos[i, 0], self.datos[i, 1], c=color[clase[i]], s=150)
-		else:
-			for i in range(self.ndatos):
-				plt.scatter(self.datos[i, 0], self.datos[i, 1], c=color[clase[i]], edgecolors='black')
-		plt.xlim(0,self.size)
-		plt.ylim(0, self.size)
+		cmap_bold = ListedColormap(['#0037FF', '#FF8800', '#007F46', '#FF0D05', '#FF7E05'])
 
-		plt.show(block=0)
-		plt.pause(0.5)
+		if train:
+			plt.scatter(self.datosx, self.datosy, c=clase, cmap=cmap_bold)
+		else:
+			plt.scatter(self.datosx, self.datosy, c=clase)
+		plt.xlim(-1.5 * self.size, 1.5 * self.size)
+		plt.ylim(-1.5 * self.size, 1.5 * self.size)
 
 
 size = 100
-datos_train = Datos(train=True, ndatos=100, size=size, nclases=5)
-# datos_train.print()
-datos_test = Datos(ndatos=100, size=size)
-datos_train.print(clase=datos_train.clase, train=True)
-model = KNN(7)
-model.train(datos_train.datos, datos_train.clase)
+ndatos = 1000
+datos_train = Datos(ndatos=ndatos, size=size)
+datos_test = Datos(ndatos=50, size=size)
+cmap_light = ListedColormap(['#00a5ff', '#FFB45E', '#00E016', '#FF8987', '#FF9927'])
 
-clase = model.predict(datos_test.datos)
-datos_test.print(clase=clase)
+for k in [1, 3, 5, 7]:
+	print("K: {}".format(k))
+	plt.figure(k)
 
-xx, yy = np.meshgrid(np.arange(0, size, 5), np.arange(0, size, 5))
-datos2 = np.c_[xx.ravel(), yy.ravel()]
-clase2 = model.predict(datos2)
-color = ['red', 'black', 'blue', 'orange', 'magenta', 'yellow']
-for i in range(len(clase2)):
-	plt.scatter(datos2[i, 0], datos2[i, 1], c=color[clase2[i]], alpha=0.8)
+	model = KNN(k)
+	model.train(datos_train.datos, datos_train.clase)
+	clase = model.predict(datos_test.datos)
+	accuracy = model.acc(datos_test.clase, clase)
+	print(accuracy)
+
+	xx, yy = np.meshgrid(np.arange(-2 * size, 2 * size, 2), np.arange(-2 * size, 2 * size, 2))
+	datos2 = np.c_[xx.ravel(), yy.ravel()]
+	clase2 = model.predict(datos2)
+	Z = clase2.reshape(xx.shape)
+
+	plt.pcolormesh(xx, yy, Z, cmap=cmap_light, shading='auto')
+	datos_train.print(train=True, clase=datos_train.clase)
+	plt.xlabel('X')
+	plt.ylabel('Y')
+	plt.title('K={}, acc={}, ndatos={}'.format(k, '%.3f' % accuracy, ndatos))
 	plt.show(block=0)
 	plt.pause(0.001)
 
-plt.figure()
-
-
-datos_train.print(clase=datos_train.clase, train=True)
-model = KNN(5)
-model.train(datos_train.datos, datos_train.clase)
-
-clase = model.predict(datos_test.datos)
-datos_test.print(clase=clase)
-
-xx, yy = np.meshgrid(np.arange(0, size, 5), np.arange(0, size, 5))
-datos2 = np.c_[xx.ravel(), yy.ravel()]
-clase2 = model.predict(datos2)
-color = ['red', 'black', 'blue', 'orange', 'magenta', 'yellow']
-for i in range(len(clase2)):
-	plt.scatter(datos2[i, 0], datos2[i, 1], c=color[clase2[i]], alpha=0.8)
-	plt.show(block=0)
-	plt.pause(0.001)
-
-plt.figure()
+	# plt.savefig("fronteras_de_decision_K_{}_{}.pdf".format(k, ndatos))
 
 datos_train.print(clase=datos_train.clase, train=True)
-model = KNN(3)
-model.train(datos_train.datos, datos_train.clase)
-
-clase = model.predict(datos_test.datos)
-datos_test.print(clase=clase)
-
-xx, yy = np.meshgrid(np.arange(0, size, 5), np.arange(0, size, 5))
-datos2 = np.c_[xx.ravel(), yy.ravel()]
-clase2 = model.predict(datos2)
-color = ['red', 'black', 'blue', 'orange', 'magenta', 'yellow']
-for i in range(len(clase2)):
-	plt.scatter(datos2[i, 0], datos2[i, 1], c=color[clase2[i]], alpha=0.8)
-	plt.show(block=0)
-	plt.pause(0.001)
-
-
-plt.figure()
-
-
-datos_train.print(clase=datos_train.clase, train=True)
-model = KNN(1)
-model.train(datos_train.datos, datos_train.clase)
-
-clase = model.predict(datos_test.datos)
-datos_test.print(clase=clase)
-
-xx, yy = np.meshgrid(np.arange(0, size, 5), np.arange(0, size, 5))
-datos2 = np.c_[xx.ravel(), yy.ravel()]
-clase2 = model.predict(datos2)
-color = ['red', 'black', 'blue', 'orange', 'magenta', 'yellow']
-for i in range(len(clase2)):
-	plt.scatter(datos2[i, 0], datos2[i, 1], c=color[clase2[i]], alpha=0.8)
-	plt.show(block=0)
-	plt.pause(0.001)

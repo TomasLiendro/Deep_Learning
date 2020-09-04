@@ -19,6 +19,14 @@ class KNN:
 		self.X = np.reshape(X, (X.shape[0], np.prod(self.im_shape)))
 		self.Y = Y
 
+	def acc(self, y1, y2):
+		acc = np.zeros(len(y2))
+		for i in range(len(y2)):
+			if y2[i] == y1[i]:
+				acc[i] = 1
+		acc = np.sum(acc) / len(y2)
+		return acc
+
 	def predict(self, X):
 		assert self.X is not None, 'Train method needs to be call first'
 		X = X.astype(np.int16)
@@ -27,7 +35,6 @@ class KNN:
 		for idx in range(X.shape[0]):
 			norm = np.linalg.norm(self.X - X[idx].ravel(), ord=2, axis=-1)
 			ordenado_idsmin = norm.argsort()
-			# print(norm[ordenado_idsmin[0]], norm[ordenado_idsmin[2]], norm[ordenado_idsmin[3]])
 			idsmin = ordenado_idsmin[:self.K]
 			for i in range(self.K):
 				Yp[idx, i] = self.Y[idsmin[i]]
@@ -36,41 +43,28 @@ class KNN:
 			resu[idx] = b[0]
 		return resu
 
-
-#
+# Uncomment this to check Ex. 3.
+# Leave this commented to run Ex 4.
+'''
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-print('x_train shape: ', x_train.shape)
-print(x_train.shape[0], 'train shape')
-print(x_test.shape[0], 'test shape')
-model = KNN(K=3)
-model.train(x_train, y_train)
-resu = model.predict(x_test[:20])
+xtr, ytr = x_train, y_train
+xt, yt = x_test[:20], y_test[:20]
 
-print(resu)
-print(y_test[:20])
+for k in [1, 3, 5, 7, 11, 13, 15]:
+	model = KNN(K=k)
+	model.train(xtr, ytr)
+	resu = model.predict(xt)
+	acc = model.acc(yt, resu)
+	print('CIFAR-10: K={}, Accuracy={}'.format(k, acc))
 
-#
 (X_train, Y_train), (X_test, Y_test) = tf.datasets.mnist.load_data()
-print('MNIST Dataset Shape:')
-print('X_train: ' + str(X_train.shape))
-print('Y_train: ' + str(Y_train.shape))
-print('X_test:  ' + str(X_test.shape))
-print('Y_test:  ' + str(Y_test.shape))
+xtr, ytr = X_train, Y_train
+xt, yt = X_test[:100], Y_test[:100]
 
-model = KNN(K=3)
-model.train(X_train, Y_train)
-resu = model.predict(X_test[:20])
-
-# print(resu)
-# print(Y_test[:20])
-
-# for i in range(len(X_test[:20])):
-# 	sample = i
-# 	image = X_test[sample]
-# 	# plot the sample
-# 	fig = plt.figure(i)
-# 	plt.imshow(image, cmap='gray')
-# plt.show()
-
-acc = np.mean(resu == Y_test[:20])
-print('accuracy: %f' % acc)
+for k in [1, 3, 5, 7, 11, 13, 15]:
+	model = KNN(K=k)
+	model.train(xtr, ytr)
+	resu = model.predict(xt)
+	acc = model.acc(yt, resu)
+	print('MNIST: K={}, Accuracy={}'.format(k, acc))
+'''

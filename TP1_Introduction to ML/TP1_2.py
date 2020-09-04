@@ -21,25 +21,11 @@ class Clase(object):
 
 		for i in range(self.ndistr):
 			self.start()
-		# 	self.datos[i] = np.asarray(self.datos[i])
-		# self.chain = self.datos[0]
-		# for i in range(1, self.ndistr):
-		# 	self.chain = np.concatenate((self.chain, self.datos[i]))
-
-		# print(len(self.chain))
-		# b = np.ones((len(self.chain), 1))
-		# print(b)
-		# self.chain = np.concatenate((b, self.chain))
-		# defino las medias:
-		# for i in range(self.K):
-		# 	self.media.append(np.random.uniform(-self.tamano/3, self.tamano/3))
 
 		self.datos2 = []
 		for d in range(self.ndistr):
 			for i in range(len(self.datos[d])):
 				self.datos2.append([self.datos[d][i, :], 0])  # el ultimo indice indica la clase a la que pertenece
-
-		# arr = np.asarray(self.datos)
 
 		self.definir_medias()
 
@@ -83,7 +69,25 @@ class Clase(object):
 		for h in range(niter):
 			self.kmeans()
 			self.calc_media()
-			self.print()
+
+			# self.print()
+
+			if h == 0:
+				plt.figure()
+				self.print()
+				plt.savefig('ej2_t0.pdf')
+			if h == 5:
+				plt.figure()
+				self.print()
+				plt.savefig('ej2_ti.pdf')
+			if h == 10:
+				plt.figure()
+				self.print()
+				plt.savefig('ej2_ti2.pdf')
+			if h == 19:
+				plt.figure()
+				self.print()
+				plt.savefig('ej2_te.pdf')
 
 	def kmeans(self):
 		for j in range(len(self.datos2)):  # calculo la distancia para cada elemento de la clase a la media
@@ -99,6 +103,9 @@ class Clase(object):
 	def print(self):
 		for l in range(len(self.datos2)):
 			plt.plot(self.datos2[l][0][0], self.datos2[l][0][1], '*', color=self.color[self.datos2[l][1]])
+		plt.title("K-Means")
+		plt.xlabel('X')
+		plt.ylabel('Y')
 
 		plt.show(block=0)
 		plt.pause(0.01)
