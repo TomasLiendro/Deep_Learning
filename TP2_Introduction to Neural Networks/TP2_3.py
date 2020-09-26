@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import tensorflow.keras.datasets.cifar10 as cifar10
 
 
-def SVM(y_pred,y_real):
+def SVM(y_pred,y_real):  # Función de costo SVM
     y_real = np.argmax(y_real, axis=1)
     y_pred=y_pred.T
     delta=1
@@ -15,7 +15,7 @@ def SVM(y_pred,y_real):
     return np.mean(L)
 
 
-def gradSVM(y_pred,y_real):
+def gradSVM(y_pred,y_real):  # Derivada de la función de costo SVM
     delta=1
     y_real = np.argmax(y_real, axis=1)
     y_pred = y_pred.T
@@ -28,7 +28,7 @@ def gradSVM(y_pred,y_real):
     return margins.T
 
 
-def CCE(y_pred,y_real):  #softmax
+def CCE(y_pred,y_real):  # Función de costo Softmax (CCE)
     y_real = np.argmax(y_real, axis=1)
     y = np.max(y_pred.T, axis=0)
     y_pred=y_pred.T-y
@@ -39,7 +39,7 @@ def CCE(y_pred,y_real):  #softmax
     return loss
 
 
-def gradCCE(y_pred,y_real): #gradiente de softmax
+def gradCCE(y_pred,y_real):  # Derivada de softmax (CCE)
     y_real = np.argmax(y_real, axis=1)
     y = np.max(y_pred.T, axis=0)
     y_pred = y_pred.T - y
@@ -51,14 +51,29 @@ def gradCCE(y_pred,y_real): #gradiente de softmax
     return margins
 
 
-def sigmoide(X):  # Función de actuvación
+def MSE(S2, yy_real):  # Función de Costo MSE
+    y = np.mean(np.sum((S2 - yy_real) ** 2, axis=1))
+    return y
+
+
+def gradMSE(S2, yy_real):  # Gradiente de la función de Costo MSE
+    y = 2 * (S2-yy_real)
+    return y
+
+
+def sigmoide(X):  # Función de activación Sigmoide
     exp = np.exp(-X)
     exp = 1 + exp
     y = 1 / exp
     return y
 
 
-def accuracy(y_est, y_real):
+def grad_sigmoide(x):  # Gradiente de la función de activación Sigmoide
+    y = sigmoide(x) * (1 - sigmoide(x))
+    return y
+
+
+def accuracy(y_est, y_real):  # Cálculo de la precisión
     acc = np.zeros((y_est.shape[0], 1))
     Y_pred = np.argmax(y_est, axis=1)
     acc[Y_pred[:, np.newaxis] == y_real] = 1
@@ -67,37 +82,24 @@ def accuracy(y_est, y_real):
     return y
 
 
-def MSE(S2, yy_real):  # Función de Costo
-    y = np.mean(np.sum((S2 - yy_real) ** 2, axis=1))
-    return y
-
-
-def gradMSE(S2, yy_real):  # Gradiente de la función de Costo
-    y = 2 * (S2-yy_real)
-    return y
-
-
-def grad_sigmoide(x):  # Gradiente de la función de activación
-    y = sigmoide(x) * (1 - sigmoide(x))
-    return y
-
-
 nclases = 10            # salida
 nintermedia = 100       # intermedia
 batch_size = 256        # Batch size
-n_epocas = 200           # Cantidad de épocas
-learning_rate = 1e-5    # Learning rate
+n_epocas = 50           # Cantidad de épocas
+learning_rate = 1e-6    # Learning rate
 reg_lambda = 1e-3       # Coeficiente de regularización
-n_train_data = 10000     # Cantidad de datos que se usarán para entrenar
+n_train_data = 5000     # Cantidad de datos que se usarán para entrenar
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()  # Cargo los datos de CIFAR-10
 
 # acondiciono los datos de training
 im_shape = x_train.shape[1:]
-xtr = np.reshape(x_train[:n_train_data], (x_train[:n_train_data].shape[0], np.prod(im_shape)))  # Los datos de train como vector
-x_mean = np.mean(xtr[:, np.newaxis], axis=0)    # calculo la media
+xtr = np.reshape(x_train[:n_train_data], (x_train[:n_train_data].shape[0], np.prod(im_shape)))   # Los datos de train como vector
 
-xtr = xtr - x_mean  # le resto la media por estabilidad del algoritmo
+x_mean = np.mean(xtr, axis=0)[np.newaxis, :]  # media de los datos de training
+std = np.std(xtr, axis=0)[np.newaxis, :]    # STD de los datos de training
+
+xtr = (xtr - x_mean) / std
 
 xtr = np.hstack([np.ones((x_train[:n_train_data].shape[0], 1)), xtr])   # agrego una fila de 1's para el bias
 ytr = y_train[:n_train_data]
@@ -105,22 +107,24 @@ ytr = y_train[:n_train_data]
 yy_tr = np.zeros((ytr.shape[0], nclases))  # esto es un vector de train_data x 10 para representar las clases
 yy_tr[np.arange(ytr.shape[0]), ytr.T] = 1  # vector de train_data x 10
 
-nro_batchs = int(ytr.shape[0] / batch_size) # Cantidad de batches
+nro_batchs = int(ytr.shape[0] / batch_size)  # Cantidad de batches
 
-# acondiciono los datos de testing
-n_train_data_t = int(n_train_data/10)
+# Acondiciono los datos de testing:
+n_train_data_t = int(n_train_data/10)  # los datos que se van a tomar para el testing
 im_shape_test = x_test.shape[1:]
 xt = np.reshape(x_test[:n_train_data_t], (x_test[:n_train_data_t].shape[0], np.prod(im_shape_test)))  # Los datos de test como vector
-xt = xt - x_mean    # le resto la media por estabilidad del algoritmo
+xt = (xt - x_mean) / std
 xt = np.hstack([np.ones((x_test[:n_train_data_t].shape[0], 1)), xt])  # agrego una fila de 1's para el bias
 yt = y_test[:n_train_data_t]
 
 yy_t = np.zeros((yt.shape[0], nclases))  # esto es un vector de train_data x 10 para representar las clases
 yy_t[np.arange(yt.shape[0]), yt.T] = 1  # vector de train_data x 10
 
+
+# '''
 # inicializo las W de cada capa
-W1 = np.random.randn(xtr.shape[1], nintermedia) * 0.001  # 3073 x 100, meto el primer bias
-W2 = np.random.randn(W1.shape[1]+1, nclases) * 0.001  # 101 x 10 : meto el segundo bias
+W1 = np.random.normal(0, 1, (xtr.shape[1], nintermedia)) * 0.01  # 3073 x 100, meto el primer bias
+W2 = np.random.normal(0, 1, (W1.shape[1] + 1, nclases)) * 0.1  # 101 x 10 : meto el segundo bias
 
 # Se inicializan los vectores para guardar información para plotear
 train_acc = np.zeros((n_epocas, 1))
@@ -162,6 +166,8 @@ for i in range(n_epocas):
         # Backward
         # Capa 1
         grad = gradMSE(S2, yyy_tr)  # gradiente de la Función costo
+        grad = grad + 2 * (np.sum(W1) + np.sum(W2)) * reg_lambda / 2
+
         grad_W2 = np.dot(S1_prima.T, grad) # delta W2
         grad = np.dot(grad, W2.T)
         grad = grad[:, 1:]
@@ -187,34 +193,55 @@ for i in range(n_epocas):
     test_acc[i] = test_acc[i] / nro_batchs
     test_loss[i] = test_loss[i]/nro_batchs
 
-    print('Epoca: '+str(i) + '  Accuracy: '+str(train_acc[i]))
+    print('Epoca: ' + str(i) + '  Accuracy: ' + str(train_acc[i]) + '     Loss: ' + str(test_loss[i]))
 
 plt.figure(1)
+#
 # plt.plot(epoca, train_acc,'r*')
-plt.plot(epoca, test_acc,'k*')
+# plt.plot(epoca, test_acc,'k*')
+plt.plot(epoca, test_acc,'*')
 # plt.legend(['Training data', 'Testing data'])
 # plt.title('Evolución del accuracy - CIFAR10')
 # plt.xlabel('Época')
 # plt.ylabel('Accuracy')
 # plt.savefig('Accuracy{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
-# plt.figure(2)
-# plt.plot(epoca, train_loss,'r-*')
-# plt.plot(epoca, test_loss,'k-*')
-# plt.legend(['Training data', 'Testing data'])
+# fig, ax1 = plt.subplots()
 # plt.title('Evolución de la Loss - CIFAR10')
-# plt.xlabel('Época')
-# plt.ylabel('Loss')
+# ax1.set_xlabel('Época')
+# ax1.set_ylabel('Loss', color='tab:red')
+# # plt.legend(['Training data', 'Testing data'])
+# ax1.tick_params(axis='y', labelcolor='r')
+# ax1.plot(epoca, train_loss, color='tab:red', marker='*')
+#
+# ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+#
+# color = 'k'
+# ax2.set_ylabel('Loss', color=color)  # we already handled the x-label with ax1
+# ax2.plot(epoca, test_loss, color=color, marker='*')
+# ax2.tick_params(axis='y', labelcolor=color)
+#
+# fig.tight_layout()  # otherwise the right y-label is slightly clipped
 # plt.savefig('Loss_ep{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
-# plt.ylim(0,train_loss[1])
-# plt.show()
+# plt.show(block=0)
+# plt.pause(1)
+# '''
 
 
-# Ahora cambio por la función de costo SVM
+###############   Ahora cambio por la función de costo SVM  ##############################
+# '''
+nclases = 10            # salida
+nintermedia = 100       # intermedia
+batch_size = 128        # Batch size
+n_epocas = 50           # Cantidad de épocas
+learning_rate = 1e-5    # Learning rate
+reg_lambda = 1e-3       # Coeficiente de regularización
+n_train_data = 5000     # Cantidad de datos que se usarán para entrenar
 
+nro_batchs = int(ytr.shape[0] / batch_size) # Cantidad de batches
 
 # inicializo las W de cada capa
-W1 = np.random.randn(xtr.shape[1], nintermedia) * 0.001  # 3073 x 100, meto el primer bias
-W2 = np.random.randn(W1.shape[1]+1, nclases) * 0.001  # 101 x 10 : meto el segundo bias
+W1 = np.random.normal(0, 1, (xtr.shape[1], nintermedia)) * 0.01  # 3073 x 100, meto el primer bias
+W2 = np.random.normal(0, 1, (W1.shape[1] + 1, nclases)) * 0.001 # 101 x 10 : meto el segundo bias
 
 # Se inicializan los vectores para guardar información para plotear
 train_acc = np.zeros((n_epocas, 1))
@@ -256,6 +283,8 @@ for i in range(n_epocas):
         # Backward
         # Capa 1
         grad = gradSVM(S2, yyy_tr)  # gradiente de la Función costo
+        grad = grad + 2 * (np.sum(W1) + np.sum(W2)) * reg_lambda / 2
+
         grad_W2 = np.dot(S1_prima.T, grad) # delta W2
         grad = np.dot(grad, W2.T)
         grad = grad[:, 1:]
@@ -281,33 +310,59 @@ for i in range(n_epocas):
     test_acc[i] = test_acc[i] / nro_batchs
     test_loss[i] = test_loss[i]/nro_batchs
 
-    print('Epoca: '+str(i) + '  Accuracy: '+str(train_acc[i]))
+    print('Epoca: ' + str(i) + '  Accuracy: ' + str(train_acc[i]) + '     Loss: ' + str(test_loss[i]))
 
-plt.figure(1)
+# plt.figure(1)
 # plt.plot(epoca, train_acc,'r*')
-plt.plot(epoca, test_acc,'b*')
+# plt.plot(epoca, test_acc,'k*')
+plt.plot(epoca, test_acc,'*')
 # plt.legend(['Training data', 'Testing data'])
 # plt.title('Evolución del accuracy - CIFAR10')
 # plt.xlabel('Época')
 # plt.ylabel('Accuracy')
 # plt.savefig('Accuracy{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
-# plt.figure(2)
-# plt.plot(epoca, train_loss,'r-*')
-# plt.plot(epoca, test_loss,'k-*')
-# plt.legend(['Training data', 'Testing data'])
+# fig, ax1 = plt.subplots()
+#
+# # plt.plot(epoca, train_loss, 'r-*')
+# # plt.plot(epoca, test_loss, 'k-*')
 # plt.title('Evolución de la Loss - CIFAR10')
-# plt.xlabel('Época')
-# plt.ylabel('Loss')
+# ax1.set_xlabel('Época')
+# ax1.set_ylabel('Loss', color='tab:red')
+# ax1.tick_params(axis='y', labelcolor='r')
+# # plt.legend(['Training data', 'Testing data'])
+#
+# ax1.plot(epoca, train_loss, color='tab:red',marker='*')
+#
+# ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+#
+# color = 'k'
+# ax2.set_ylabel('Loss', color=color)  # we already handled the x-label with ax1
+# ax2.plot(epoca, test_loss, color=color, marker='*')
+# ax2.tick_params(axis='y', labelcolor=color)
+#
+# fig.tight_layout()  # otherwise the right y-label is slightly clipped
 # plt.savefig('Loss_ep{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
-# plt.ylim(0,train_loss[1])
-# plt.show()
+# # plt.ylim(0,train_loss[1])
+# plt.show(block=0)
+# plt.pause(1)
+# '''
 
 
-# Ahora cambio por la función de costo de Soft Max
+###############   Ahora cambio por la función de costo CCE  ##############################
+
+nclases = 10            # salida
+nintermedia = 100       # intermedia
+batch_size = 128        # Batch size
+n_epocas = 50           # Cantidad de épocas
+learning_rate = 1e-5    # Learning rate
+reg_lambda = 1e-3       # Coeficiente de regularización
+n_train_data = 5000     # Cantidad de datos que se usarán para entrenar
+
+nro_batchs = int(ytr.shape[0] / batch_size)  # Cantidad de batches
 
 # inicializo las W de cada capa
-W1 = np.random.randn(xtr.shape[1], nintermedia) * 0.001  # 3073 x 100, meto el primer bias
-W2 = np.random.randn(W1.shape[1]+1, nclases) * 0.001  # 101 x 10 : meto el segundo bias
+W1 = np.random.normal(0, 1, (xtr.shape[1], nintermedia)) * 0.01  # 3073 x 100, meto el primer bias
+W2 = np.random.normal(0, 1, (W1.shape[1] + 1, nclases)) * 0.1  # 101 x 10 : meto el segundo bias
 
 # Se inicializan los vectores para guardar información para plotear
 train_acc = np.zeros((n_epocas, 1))
@@ -349,6 +404,8 @@ for i in range(n_epocas):
         # Backward
         # Capa 1
         grad = gradCCE(S2, yyy_tr)  # gradiente de la Función costo
+        grad = grad + 2 * (np.sum(W1) + np.sum(W2)) * reg_lambda / 2
+
         grad_W2 = np.dot(S1_prima.T, grad) # delta W2
         grad = np.dot(grad, W2.T)
         grad = grad[:, 1:]
@@ -374,23 +431,53 @@ for i in range(n_epocas):
     test_acc[i] = test_acc[i] / nro_batchs
     test_loss[i] = test_loss[i]/nro_batchs
 
-    print('Epoca: '+str(i) + '  Accuracy: '+str(train_acc[i]))
+    print('Epoca: ' + str(i) + '  Accuracy: ' + str(train_acc[i]) + '     Loss: ' + str(test_loss[i]))
 
-plt.figure(1)
+
+# plt.figure(1)
 # plt.plot(epoca, train_acc,'r*')
-plt.plot(epoca, test_acc,'r*')
+# plt.plot(epoca, test_acc,'k*')
+plt.plot(epoca, test_acc,'*')
+# plt.legend(['Training data', 'Testing data'])
+# plt.title('Evolución del accuracy - CIFAR10')
+# plt.xlabel('Época')
+# plt.ylabel('Accuracy')
+# plt.savefig('Accuracy{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
+# fig, ax1 = plt.subplots()
+#
+# # plt.plot(epoca, train_loss, 'r-*')
+# # plt.plot(epoca, test_loss, 'k-*')
+# plt.title('Evolución de la Loss - CIFAR10')
+# ax1.set_xlabel('Época')
+# ax1.set_ylabel('Loss', color='tab:red')
+# ax1.tick_params(axis='y', labelcolor='r')
+# # plt.legend(['Training data', 'Testing data'])
+#
+# ax1.plot(epoca, train_loss, color='tab:red',marker='*')
+#
+# ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+#
+# color = 'k'
+# ax2.set_ylabel('Loss', color=color)  # we already handled the x-label with ax1
+# ax2.plot(epoca, test_loss, color=color, marker='*')
+# ax2.tick_params(axis='y', labelcolor=color)
+#
+# fig.tight_layout()  # otherwise the right y-label is slightly clipped
+# plt.savefig('Loss_ep{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
+# # plt.ylim(0,train_loss[1])
+# plt.show(block=0)
+# plt.pause(1)
+
+
+###############   Esto sirve para plotear los 3 métodos juntos  ##############################
+
+# plt.figure()
+# plt.plot(epoca, train_acc,'r*')
+# plt.plot(epoca, test_acc,'r*')
 plt.legend(['MSE', 'SVM', 'CCE'])
 plt.title('Comparación de la evolución del accuracy - CIFAR10')
 plt.xlabel('Época')
 plt.ylabel('Accuracy')
 plt.savefig('Accuracy{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
-# plt.figure(2)
-# plt.plot(epoca, train_loss,'r-*')
-# plt.plot(epoca, test_loss,'k-*')
-# plt.legend(['Training data', 'Testing data'])
-# plt.title('Evolución de la Loss - CIFAR10')
-# plt.xlabel('Época')
-# plt.ylabel('Loss')
-# plt.savefig('Loss_ep{}bz{}td{}.pdf'.format(n_epocas, batch_size, n_train_data))
-# plt.ylim(0,train_loss[1])
+
 plt.show()

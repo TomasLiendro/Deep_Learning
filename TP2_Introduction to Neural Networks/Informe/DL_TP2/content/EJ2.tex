@@ -1,0 +1,35 @@
+% first of all, we define our grid
+\begin{VCPicture}{(0,-3)(6,3)}
+
+% and then we create the states
+\ChgEdgeLabelScale{0.5}
+\ChgEdgeLabelSep{.5}
+\LargeState
+\VSState{(-1.5,1.5)}{S1}
+\VSState{(-1.5,0)}{S2}
+% \VSState{(-1.5,-1.5)}{S3}
+% \VSState{(-1.5,-3)}{S4}
+% \VSState{(-1.5,-4.5)}{S5}
+
+\State[W]{(0,1.5)}{STATEA}
+\State[\vec{x}]{(0,0)}{STATEB}
+
+\State[\cdot]{(2,0.75)}{STATEC}
+
+\State[\sigma]{(4,.75)}{STATED}
+
+\StateVar[MSE]{(7,.75)}{STATEE}
+\VSState{(9,.75)}{ENDSTATE}
+
+\EdgeR{S1}{STATEA}{}
+\EdgeR{S2}{STATEB}{}
+
+\EdgeR{STATEA}{STATEC}{}
+\EdgeR{STATEB}{STATEC}{}
+
+\EdgeR{STATEC}{STATED}{}
+\EdgeR{STATED}{STATEE}{}
+\EdgeR{STATEE}{ENDSTATE}{}
+
+
+\end{VCPicture}

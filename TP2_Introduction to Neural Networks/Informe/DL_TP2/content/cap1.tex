@@ -1,0 +1,98 @@
+\section{Ejercicio 1}
+
+En este trabajo se abordaron los conceptos de \textit{Computational Graphs} y \textit{Back Propagation} para entrenar una red neuronal densa.
+Un \textbf{grafo computacional} es una manera de representar una función matemática en el lenguaje de la teoría de grafos. En el grafo, cada nodo representa un valor de una variable o una función que combina valores. Los valores que ingresan o salen de los nodos se denominan \textbf{Tensores}.
+
+Utilizando el concepto de \textbf{grafos computacionales} se busca implementar las funciones \textbf{Sigmoide}, \textbf{Tanh}, \textbf{ELU} y \textbf{Leaky Relu}, tomando como entrada:
+$x=[2.8, -1.8]$, $W=[1.45, -0.35]$, $b=-4$. En los siguientes grafos, los valores en color negro indican los resultados del proceso hacia adelante (\textit{forward}) mientras que en rojo se colocan los resultados del \textit{Backpropagation} recordando que el valor del gradiente a la salida del grafo es 1.
+
+\subsection{Sigmoide}
+
+\begin{equation}
+    f(x)=\frac{1}{1+e^{-x}};\ \ f'(x)=\sigma(x)(1-\sigma(x))
+\end{equation}
+\vspace{1cm}
+\hspace{1.5cm}
+\input{content/sigmoide}
+\newline
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=2in]{image/sigmoide}
+    \caption{Función Sigmoide ($\sigma(x))$}
+    \label{fig:my_label}
+\end{figure}
+
+
+\subsection{Tanh}
+
+\begin{equation}
+    f(x)=tanh(x)=\frac{e^{-x}-1}{e^{-x}+1}; \ \ f'(x)=1-tanh^2(x)
+\end{equation}
+\vspace{1cm}
+\hspace{1.5cm}
+\input{content/tanh}
+\newline
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=2in]{image/tanh}
+    \caption{Función Tangente Hiperbólica ($tanh(x)$)}
+    \label{fig:my_label}
+\end{figure}
+
+\subsection{ELU}
+
+\[   
+f(a,b) = 
+     \begin{cases}
+        \text{x} & x \geq 0 \\
+       \text{$\alpha (\exp(x)-1)$} & x < 0 \\
+     \end{cases}
+\]
+
+Para la primera ecuación:
+\vspace{1cm}
+\hspace{5.5cm}
+\input{content/ELU1}
+\newline
+Para la segunda ecuación:
+\vspace{1cm}
+\hspace{1.5cm}
+\input{content/ELU2}
+\newline
+\newline
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=2in]{image/ELU}
+    \caption{Función de activación ELU}
+    \label{fig:my_label}
+\end{figure}
+
+
+
+\subsection{Leaky Relu}
+
+\begin{equation}
+    f(x)=LeakyRelu(x)=max(0.1x; x)
+\end{equation}
+\vspace{1cm}
+\hspace{3.5cm}
+\input{content/relu}
+\newline
+\newline
+\newline
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=2in]{image/relu}
+    \caption{Función Leaky Relu}
+    \label{fig:my_label}
+\end{figure}
+
+La elección de la función de activación para una capa de una red neuronal depende de los valores de salida que se requieren y de las propiedades de la función de activación utilizada. Por ejemplo, si se trabajan con probabilidades, podría pensarse en usar la función de activación \textbf{Sigmoide} dado que esta función tiene la salida acotada entre 0 y 1, si se trabaja con valores positivos se pensaría en usar la función \textbf{Relu} que anula los valores negativos y para valores generales, se pensaría en usar la función de activación \textbf{Lineal}.
+
+En esquemas con más de una capa, uno preferiría usar la función \textbf{Leaky Relu} en lugar de la \textbf{Relu}, la cual permite ser más permisivo al no anular completamente ciertas neuronas y por el mismo motivo, se prefiere usar la función \textbf{tanh} en lugar de la \textbf{Sigmoide}.
+
+
