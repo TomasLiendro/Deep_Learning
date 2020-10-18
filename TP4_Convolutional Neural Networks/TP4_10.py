@@ -8,7 +8,7 @@ import tensorflow.keras.losses as losses
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
 import numpy as np
@@ -77,12 +77,11 @@ def ANet_C10(x_train, y_train, x_test, y_test, size):
 	model = models.Model(input_img, out)
 
 	model.summary()
-	lossCCE = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
 
 	optimizer = tf.keras.optimizers.Adagrad(learning_rate=.01)
-	model.compile(optimizer, loss=losses.binary_crossentropy, metrics=['accuracy'])
+	model.compile(optimizer, loss=losses.categorical_crossentropy, metrics=['accuracy'])
 	epocas = 25
-	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -139,78 +138,84 @@ def VGG16_C10(x_train, y_train, x_test, y_test, size):
 
 	xtr = np.reshape(xtr, (-1, im_shape[0], im_shape[1], im_shape[2]))
 	xt = np.reshape(xt, (-1, im_shape_test[0], im_shape_test[1], im_shape_test[2]))
+	reg = 0.0005
+	model = tf.keras.models.Sequential()
+	# VGG16 - CIFAR10
+	model.add(tf.keras.layers.Conv2D(64, kernel_size=(3, 3), padding="same", activation="relu",
+									 input_shape=xtr.shape[1:], kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.3))
+	model.add(tf.keras.layers.Conv2D(64, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
-	model = models.Model()
-	input_img = layers.Input(shape=xtr.shape[1:])
-	x = layers.Conv2D(filters=64, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(input_img)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.3)(x)
-	x = layers.Conv2D(filters=64, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(2, 2), strides=(1,1))(x)
-	x = layers.Dropout(0.2)(x)
+	model.add(tf.keras.layers.Conv2D(128, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(128, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
-	x = layers.Conv2D(filters=64, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.4)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(2, 2), strides=(1,1))(x)
+	model.add(tf.keras.layers.Conv2D(256, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(256, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(256, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
-	x = layers.Dropout(0.4)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(3, 3), strides=(2,2))(x)
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(2, 2), strides=(2,2))(x)
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+	model.add(tf.keras.layers.Dropout(0.5))
 
+	model.add(tf.keras.layers.Flatten())
+	model.add(tf.keras.layers.Dense(512, activation="relu", kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(250, activation="relu", kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(250, activation="relu", kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
 
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-
-	x = layers.Flatten()(x)
-	x = layers.Dropout(0.2)(x)
-
-	x = layers.Dense(500, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dense(250, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dense(250, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
-	x = layers.BatchNormalization()(x)
-
-	out = layers.Dense(yy_tr.shape[1], activation=activations.softmax, kernel_regularizer=regularizers.l2(0.01))(x)
-
-	model = models.Model(input_img, out)
-
+	model.add(tf.keras.layers.Dropout(0.5))
+	model.add(tf.keras.layers.Dense(yy_tr.shape[1], activation="softmax"))
 	model.summary()
-	lossCCE = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
 
-	optimizer = tf.keras.optimizers.Adagrad(learning_rate=1)
-	model.compile(optimizer, loss=losses.binary_crossentropy, metrics=['accuracy'])
+	optimizer = tf.keras.optimizers.Adadelta(lr=1)
+	model.compile(optimizer, loss=tf.keras.losses.categorical_crossentropy, metrics=["accuracy"])
+
 	epocas = 25
-	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	results = model.fit(xtr, yy_tr, batch_size=512, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -294,12 +299,11 @@ def ANet_C100(x_train, y_train, x_test, y_test, size):
 	model = models.Model(input_img, out)
 
 	model.summary()
-	lossCCE = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
 
 	optimizer = tf.keras.optimizers.Adagrad(learning_rate=.01)
-	model.compile(optimizer, loss=losses.binary_crossentropy, metrics=['accuracy'])
+	model.compile(optimizer, loss=losses.categorical_crossentropy, metrics=['accuracy'])
 	epocas = 25
-	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -356,78 +360,85 @@ def VGG16_C100(x_train, y_train, x_test, y_test, size):
 
 	xtr = np.reshape(xtr, (-1, im_shape[0], im_shape[1], im_shape[2]))
 	xt = np.reshape(xt, (-1, im_shape_test[0], im_shape_test[1], im_shape_test[2]))
+	reg = 0.0005
 
-	model = models.Model()
-	input_img = layers.Input(shape=xtr.shape[1:])
-	x = layers.Conv2D(filters=64, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(input_img)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.3)(x)
-	x = layers.Conv2D(filters=64, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(2, 2), strides=(1,1))(x)
-	x = layers.Dropout(0.2)(x)
+	model = tf.keras.models.Sequential()
+	# VGG16 - CIFAR10
+	model.add(tf.keras.layers.Conv2D(64, kernel_size=(3, 3), padding="same", activation="relu",
+									 input_shape=xtr.shape[1:], kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.3))
+	model.add(tf.keras.layers.Conv2D(64, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.4)(x)
-	x = layers.Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(2, 2), strides=(1,1))(x)
+	model.add(tf.keras.layers.Conv2D(128, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(128, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
-	x = layers.Dropout(0.4)(x)
-	x = layers.Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=256, kernel_size=(3, 3), strides=(1,1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(3, 3), strides=(2,2))(x)
+	model.add(tf.keras.layers.Conv2D(256, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(256, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(256, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.MaxPool2D(pool_size=(2, 2), strides=(2,2))(x)
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.4))
+	model.add(tf.keras.layers.Conv2D(512, kernel_size=(3, 3), padding="same", activation="relu",
+									 kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+	model.add(tf.keras.layers.Dropout(0.5))
 
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.2)(x)
-	x = layers.Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), padding="same", activation='relu', kernel_regularizer=regularizers.l2(0.0001))(x)
-	x = layers.BatchNormalization()(x)
-
-	x = layers.Flatten()(x)
-	x = layers.Dropout(0.2)(x)
-
-	x = layers.Dense(500, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dense(500, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dense(250, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
-	x = layers.BatchNormalization()(x)
-	x = layers.Dropout(0.5)(x)
-	out = layers.Dense(yy_tr.shape[1], activation=activations.softmax, kernel_regularizer=regularizers.l2(0.01))(x)
-
-	model = models.Model(input_img, out)
-
+	model.add(tf.keras.layers.Flatten())
+	model.add(tf.keras.layers.Dense(512, activation="relu", kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(250, activation="relu", kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(128, activation="relu", kernel_regularizer=regularizers.l2(reg)))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.5))
+	model.add(tf.keras.layers.Dense(yy_tr.shape[1], activation="softmax"))
 	model.summary()
-	lossCCE = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
 
-	optimizer = tf.keras.optimizers.Adagrad(learning_rate=1)
-	model.compile(optimizer, loss=losses.binary_crossentropy, metrics=['accuracy'])
-	epocas = 25
-	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	optimizer = tf.keras.optimizers.Adadelta(lr=1)
+	model.compile(optimizer, loss=tf.keras.losses.categorical_crossentropy, metrics=["accuracy"])
+
+	epocas = 20
+
+	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -448,13 +459,13 @@ def VGG16_C100(x_train, y_train, x_test, y_test, size):
 	plt.savefig('TP4_10_C100_vgg16_loss.pdf')
 
 
-# (x_train, y_train), (x_test, y_test) = cifar10.load_data()  # Cargo los datos de CIFAR-10
-# size = x_train.shape[0]
-# ANet_C10(x_train[:size], y_train[:size], x_test[:int(size / 10)], y_test[:int(size / 10)], size)
-# VGG16_C10(x_train[:size], y_train[:size], x_test[:int(size / 10)], y_test[:int(size / 10)], size)
-
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()  # Cargo los datos de CIFAR-10
+size = x_train.shape[0]
+ANet_C10(x_train[:size], y_train[:size], x_test[:int(size / 10)], y_test[:int(size / 10)], size)
+VGG16_C10(x_train[:size], y_train[:size], x_test[:int(size / 10)], y_test[:int(size / 10)], size)
 
 (x_train, y_train), (x_test, y_test) = cifar100.load_data()  # Cargo los datos de CIFAR-100
 size = x_train.shape[0]
 ANet_C100(x_train[:size], y_train[:size], x_test[:int(size / 10)], y_test[:int(size / 10)], size)
 VGG16_C100(x_train[:size], y_train[:size], x_test[:int(size / 10)], y_test[:int(size / 10)], size)
+plt.show()

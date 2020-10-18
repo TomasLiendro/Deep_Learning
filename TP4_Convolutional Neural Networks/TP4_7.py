@@ -39,11 +39,11 @@ yt = y_test[:n_train_data_t]
 
 model = models.Model()
 input = layers.Input(shape=[28*28])
-d = layers.Dense(1000, activation=activations.relu)(input)
-d = layers.Dense(500, activation=activations.relu)(d)
-d = layers.Dense(250, activation=activations.relu)(d)
-d = layers.Dense(500, activation=activations.relu)(d)
-d = layers.Dense(1000, activation=activations.relu)(d)
+d = layers.Dense(2000, activation=activations.relu)(input)
+d = layers.Dense(1500, activation=activations.relu)(d)
+d = layers.Dense(750, activation=activations.relu)(d)
+d = layers.Dense(1500, activation=activations.relu)(d)
+d = layers.Dense(2000, activation=activations.relu)(d)
 out = layers.Dense(28*28, activation=activations.sigmoid)(d)
 model = tf.keras.models.Model(input, out)
 
@@ -51,9 +51,9 @@ model = tf.keras.models.Model(input, out)
 model.summary()
 
 optimizer = tf.keras.optimizers.Adadelta(learning_rate=1)
-model.compile(optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer, loss="mse", metrics=['accuracy'])
 epocas = 20
-results = model.fit(xtr_n, xtr, batch_size=128, epochs=epocas, verbose=1, validation_data=(xt_n, xt))
+results = model.fit(xtr_n, xtr, batch_size=128, epochs=epocas, verbose=2, validation_data=(xt_n, xt))
 
 a = model.predict(xt_n)
 n=5

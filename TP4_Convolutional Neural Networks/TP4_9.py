@@ -67,21 +67,29 @@ def arqDensa(x_train, y_train, x_test, y_test,size):
 
 	xtr = np.reshape(x_train_perm[:n_train_data],(x_train_perm[:n_train_data].shape[0], np.prod(im_shape)))  # Los datos de train como vector	xt = np.reshape(x_test_perm, (-1, 28, 28, 1))
 	xt = np.reshape(x_test_perm[:n_train_data],(x_test_perm[:n_train_data].shape[0], np.prod(im_shape)))  # Los datos de train como vector	xt = np.reshape(x_test_perm, (-1, 28, 28, 1))
-
 	model = models.Model()
-	input_img = layers.Input(shape=xtr.shape[1:])
-	d = layers.Dense(100, activation=activations.relu)(input_img)
-	d = layers.Dense(200, activation=activations.relu)(d)
-	d = layers.Dense(300, activation=activations.relu)(d)
+	input = layers.Input(shape=[28*28])
+	d = layers.Dense(100, activation=activations.relu)(input)
+	# d = layers.Dropout(0.15)(d)
+	# d = layers.Dense(100, activation=activations.relu)(d)
+	d = layers.Dropout(0.15)(d)
 	out = layers.Dense(10,  activation=activations.sigmoid)(d)
-	model = tf.keras.models.Model(input_img, out)
+	model = tf.keras.models.Model(input, out)
+	#
+	# model = models.Model()
+	# input_img = layers.Input(shape=xtr.shape[1:])
+	# d = layers.Dense(100, activation=activations.relu)(input_img)
+	# d = layers.Dense(200, activation=activations.relu)(d)
+	# d = layers.Dense(300, activation=activations.relu)(d)
+	# out = layers.Dense(10,  activation=activations.sigmoid)(d)
+	# model = tf.keras.models.Model(input_img, out)
 
 	model.summary()
 
 	optimizer = tf.keras.optimizers.Adadelta(learning_rate=0.1)
 	model.compile(optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 	epocas = 20
-	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -90,7 +98,8 @@ def arqDensa(x_train, y_train, x_test, y_test,size):
 	plt.title('Ejercicio 9: Arq. de capas densas')
 	plt.xlabel('Época')
 	plt.ylabel('Accuracy')
-	plt.savefig('TP4_9_D_acc')
+	plt.ylim([0, 1])
+	plt.savefig('TP4_9_D_acc.pdf')
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_loss'], 'r*-')
@@ -99,7 +108,7 @@ def arqDensa(x_train, y_train, x_test, y_test,size):
 	plt.title('Ejercicio 9: Arq. de capas densas')
 	plt.xlabel('Época')
 	plt.ylabel('Loss')
-	plt.savefig('TP4_9_D_Loss')
+	plt.savefig('TP4_9_D_Loss.pdf')
 	plt.plot()
 
 
@@ -159,21 +168,40 @@ def arqConv(x_train, y_train, x_test, y_test, size):
 	# plt.show()
 	models.Model()
 	input_img = layers.Input(shape=xtr.shape[1:])
-	x = layers.Conv2D(8, (3, 3), activation='relu')(input_img)
+	x = layers.Conv2D(16, (3, 3), activation='relu')(input_img)
 	x = layers.Dropout(.5)(x)
-	x = layers.Conv2D(8, (3, 3), activation='relu')(x)
-	x = layers.Dropout(.5)(x)
+	x = layers.Conv2D(16, (3, 3), activation='relu')(x)
+
 	x = layers.Flatten()(x)
+	x = layers.Dropout(.5)(x)
 	out = layers.Dense(10, activation='sigmoid')(x)
 
 	autoencoder = models.Model(input_img, out)
 
 	autoencoder.summary()
 
-	optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.1)
-	autoencoder.compile(optimizer, loss=losses.binary_crossentropy, metrics=['accuracy'])
+	optimizer = tf.keras.optimizers.Adagrad(learning_rate=.01)
+	autoencoder.compile(optimizer, loss=losses.CategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 	epocas = 20
-	results = autoencoder.fit(xtr, yy_tr, batch_size=64, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	results = autoencoder.fit(xtr, yy_tr, batch_size=64, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
+
+	# models.Model()
+	# input_img = layers.Input(shape=xtr.shape[1:])
+	# x = layers.Conv2D(8, (3, 3), activation='relu')(input_img)
+	# x = layers.Dropout(.5)(x)
+	# x = layers.Conv2D(8, (3, 3), activation='relu')(x)
+	# x = layers.Dropout(.5)(x)
+	# x = layers.Flatten()(x)
+	# out = layers.Dense(10, activation='sigmoid')(x)
+	#
+	# autoencoder = models.Model(input_img, out)
+	#
+	# autoencoder.summary()
+	#
+	# optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.1)
+	# autoencoder.compile(optimizer, loss=losses.binary_crossentropy, metrics=['accuracy'])
+	# epocas = 20
+	# results = autoencoder.fit(xtr, yy_tr, batch_size=64, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -182,7 +210,8 @@ def arqConv(x_train, y_train, x_test, y_test, size):
 	plt.title('Ejercicio 9: Arq. de capas convolucionales')
 	plt.xlabel('Época')
 	plt.ylabel('Accuracy')
-	plt.savefig('TP4_9_C_acc')
+	plt.ylim([0, 1])
+	plt.savefig('TP4_9_C_acc.pdf')
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_loss'], 'r*-')
@@ -191,11 +220,11 @@ def arqConv(x_train, y_train, x_test, y_test, size):
 	plt.title('Ejercicio 9: Arq. de capas convolucionales')
 	plt.xlabel('Época')
 	plt.ylabel('Loss')
-	plt.savefig('TP4_9_C_Loss')
+	plt.savefig('TP4_9_C_Loss.pdf')
 	plt.plot()
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()  # Cargo los datos de CIFAR-10
-size = 10000
+size = x_train.shape[0]
 arqDensa(x_train[:size], y_train[:size], x_test[:int(size/10)], y_test[:int(size/10)], size)
 arqConv(x_train[:size], y_train[:size], x_test[:int(size/10)], y_test[:int(size/10)], size)
 plt.show()

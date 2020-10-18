@@ -12,7 +12,7 @@ import numpy as np
 
 
 def arqDensa(x_train, y_train, x_test, y_test):
-	n_train_data = 20000  # Cantidad de datos que se usarán para entrenar
+	n_train_data = x_train.shape[0]  # Cantidad de datos que se usarán para entrenar
 	x_test = x_test.astype("float32")
 	x_train = x_train.astype("float32")
 	# acondiciono los datos de training
@@ -52,9 +52,9 @@ def arqDensa(x_train, y_train, x_test, y_test):
 	model.summary()
 
 	optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.01)
-	model.compile(optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+	model.compile(optimizer, loss=losses.CategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 	epocas = 20
-	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	results = model.fit(xtr, yy_tr, batch_size=128, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
 
 	plt.figure(3)
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -62,8 +62,9 @@ def arqDensa(x_train, y_train, x_test, y_test):
 	plt.legend(['Datos de validación', 'Datos de entrenamiento'])
 	plt.title('Ejercicio 8: Arq. de capas densas')
 	plt.xlabel('Época')
+	plt.ylim([0, 1])
 	plt.ylabel('Accuracy')
-	plt.savefig('TP4_8_D_acc')
+	plt.savefig('TP4_8_D_acc.pdf')
 
 	plt.figure(4)
 	plt.plot(np.arange(epocas), results.history['val_loss'], 'r*-')
@@ -72,12 +73,12 @@ def arqDensa(x_train, y_train, x_test, y_test):
 	plt.title('Ejercicio 8: Arq. de capas Densas')
 	plt.xlabel('Época')
 	plt.ylabel('Loss')
-	plt.savefig('TP4_8_D_Loss')
+	plt.savefig('TP4_8_D_Loss.pdf')
 	plt.plot()
 
 
 def arqConv(x_train, y_train, x_test, y_test):
-	n_train_data = 20000  # Cantidad de datos que se usarán para entrenar
+	n_train_data = x_train.shape[0]  # Cantidad de datos que se usarán para entrenar
 	x_test = x_test.astype("float32")
 	x_train = x_train.astype("float32")
 	# acondiciono los datos de training
@@ -123,9 +124,9 @@ def arqConv(x_train, y_train, x_test, y_test):
 	autoencoder.summary()
 
 	optimizer = tf.keras.optimizers.Adagrad(learning_rate=.01)
-	autoencoder.compile(optimizer, loss=losses.binary_crossentropy, metrics=['accuracy'])
+	autoencoder.compile(optimizer, loss=losses.CategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 	epocas = 20
-	results = autoencoder.fit(xtr, yy_tr, batch_size=64, epochs=epocas, verbose=1, validation_data=(xt, yy_t))
+	results = autoencoder.fit(xtr, yy_tr, batch_size=64, epochs=epocas, verbose=2, validation_data=(xt, yy_t))
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_accuracy'], 'r*-')
@@ -133,8 +134,9 @@ def arqConv(x_train, y_train, x_test, y_test):
 	plt.legend(['Datos de validación', 'Datos de entrenamiento'])
 	plt.title('Ejercicio 8: Arq. de capas convolucionales')
 	plt.xlabel('Época')
+	plt.ylim([0, 1])
 	plt.ylabel('Accuracy')
-	plt.savefig('TP4_8_C_acc')
+	plt.savefig('TP4_8_C_acc.pdf')
 
 	plt.figure()
 	plt.plot(np.arange(epocas), results.history['val_loss'], 'r*-')
@@ -143,12 +145,12 @@ def arqConv(x_train, y_train, x_test, y_test):
 	plt.title('Ejercicio 8: Arq. de capas convolucionales')
 	plt.xlabel('Época')
 	plt.ylabel('Loss')
-	plt.savefig('TP4_8_C_Loss')
+	plt.savefig('TP4_8_C_Loss.pdf')
 	plt.plot()
 
 
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()  # Cargo los datos de CIFAR-10
-# arqDensa(x_train, y_train, x_test, y_test)
+#arqDensa(x_train, y_train, x_test, y_test)
 arqConv(x_train, y_train, x_test, y_test)
 plt.show()
